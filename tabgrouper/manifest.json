@@ -9,7 +9,7 @@
   "background": {
     "service_worker": "background_script.js"
   },
-  "browser_action": {
+  "action": {
     "default_icon": {
       "64": "icons/icon.png"
     },
@@ -21,6 +21,7 @@
   },
   "permissions": [
     "tabs",
-    "tabGroups"
+    "tabGroups",
+    "storage"
   ]
 }

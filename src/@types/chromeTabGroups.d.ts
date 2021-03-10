@@ -60,6 +60,7 @@ declare namespace chrome.tabs {
          */
         muted?: boolean;
 
+        /// APPENDED
         /**
          * Optional.
          * The ID of the group that the tabs are in, or tabGroups.TAB_GROUP_ID_NONE for ungrouped tabs.
@@ -67,6 +68,152 @@ declare namespace chrome.tabs {
          */
         groupId?: number;
     }
+
+    export interface Tab {
+        /**
+         * Optional.
+         * Either loading or complete.
+         */
+        status?: string;
+        /** The zero-based index of the tab within its window. */
+        index: number;
+        /**
+         * Optional.
+         * The ID of the tab that opened this tab, if any. This property is only present if the opener tab still exists.
+         * @since Chrome 18.
+         */
+        openerTabId?: number;
+        /**
+         * Optional.
+         * The title of the tab. This property is only present if the extension's manifest includes the "tabs" permission.
+         */
+        title?: string;
+        /**
+         * Optional.
+         * The URL the tab is displaying. This property is only present if the extension's manifest includes the "tabs" permission.
+         */
+        url?: string;
+        /**
+         * The URL the tab is navigating to, before it has committed.
+         * This property is only present if the extension's manifest includes the "tabs" permission and there is a pending navigation.
+         * @since Chrome 79.
+         */
+        pendingUrl?: string;
+        /**
+         * Whether the tab is pinned.
+         * @since Chrome 9.
+         */
+        pinned: boolean;
+        /**
+         * Whether the tab is highlighted.
+         * @since Chrome 16.
+         */
+        highlighted: boolean;
+        /** The ID of the window the tab is contained within. */
+        windowId: number;
+        /**
+         * Whether the tab is active in its window. (Does not necessarily mean the window is focused.)
+         * @since Chrome 16.
+         */
+        active: boolean;
+        /**
+         * Optional.
+         * The URL of the tab's favicon. This property is only present if the extension's manifest includes the "tabs" permission. It may also be an empty string if the tab is loading.
+         */
+        favIconUrl?: string;
+        /**
+         * Optional.
+         * The ID of the tab. Tab IDs are unique within a browser session. Under some circumstances a Tab may not be assigned an ID, for example when querying foreign tabs using the sessions API, in which case a session ID may be present. Tab ID can also be set to chrome.tabs.TAB_ID_NONE for apps and devtools windows.
+         */
+        id?: number;
+        /** Whether the tab is in an incognito window. */
+        incognito: boolean;
+        /**
+         * Whether the tab is selected.
+         * @deprecated since Chrome 33. Please use tabs.Tab.highlighted.
+         */
+        selected: boolean;
+        /**
+         * Optional.
+         * Whether the tab has produced sound over the past couple of seconds (but it might not be heard if also muted). Equivalent to whether the speaker audio indicator is showing.
+         * @since Chrome 45.
+         */
+        audible?: boolean;
+        /**
+         * Whether the tab is discarded. A discarded tab is one whose content has been unloaded from memory, but is still visible in the tab strip. Its content gets reloaded the next time it's activated.
+         * @since Chrome 54.
+         */
+        discarded: boolean;
+        /**
+         * Whether the tab can be discarded automatically by the browser when resources are low.
+         * @since Chrome 54.
+         */
+        autoDiscardable: boolean;
+        /**
+         * Optional.
+         * Current tab muted state and the reason for the last state change.
+         * @since Chrome 46. Warning: this is the current Beta channel.
+         */
+        mutedInfo?: MutedInfo;
+        /**
+         * Optional. The width of the tab in pixels.
+         * @since Chrome 31.
+         */
+        width?: number;
+        /**
+         * Optional. The height of the tab in pixels.
+         * @since Chrome 31.
+         */
+        height?: number;
+        /**
+         * Optional. The session ID used to uniquely identify a Tab obtained from the sessions API.
+         * @since Chrome 31.
+         */
+        sessionId?: string;
+
+        /// APPENDED
+        /**
+         * The ID of the group that the tab belongs to.
+         * @since Chrome 88
+         */
+        groupId: number;
+    }
+
+    export interface TabGroupOptions {
+        /**
+         * Optional.
+         * Configurations for creating a group. Cannot be used if groupId is already specified.
+         */
+        createProperties?: {
+            /**
+             * Optional.
+             * The window of the new group. Defaults to the current window.
+             */
+            windowId?: number
+        };
+        /**
+         * Optional.
+         * The ID of the group to add the tabs to. If not specified, a new group will be created.
+         */
+        groupId?: number;
+        /**
+         * The tab ID or list of tab IDs to add to the specified group.
+         */
+        tabIds: number | number[];
+    }
+
+    /**
+     * Adds one or more tabs to a specified group, or if no group is specified, adds the given tabs to a newly created group.
+     * @since Chrome 88
+     */
+    export function group(options: TabGroupOptions, callback: (groupId: number) => void);
+
+    /**
+     * Removes one or more tabs from their respective groups. If any groups become empty, they are deleted.
+     * @since Chrome 88
+     * @param tabIds The tab ID or list of tab IDs to remove from their respective groups.
+     */
+    export function ungroup(tabIds: number | number[], callback: () => void);
 }
 
 ////////////////////
@@ -162,29 +309,29 @@ declare namespace chrome.tabGroups {
         title?: string;
     }
 
-    export interface TabGroupEvent extends chrome.events.Event<(group: TabGroup) => void> { }
+    export type TabGroupEvent = chrome.events.Event<(group: TabGroup) => void>
 
     /**
      * Fired when a group is created.
      */
-    export var onCreated: TabGroupEvent;
+    export let onCreated: TabGroupEvent;
 
     /**
      * Fired when a group is moved within a window. Move events are still fired for the individual tabs within the group,
      * as well as for the group itself. This event is not fired when a group is moved between windows;
      * instead, it will be removed from one window and created in another.
      */
-    export var onMoved: TabGroupEvent;
+    export let onMoved: TabGroupEvent;
 
     /**
      * Fired when a group is closed, either directly by the user or automatically because it contained zero tabs.
      */
-    export var onRemoved: TabGroupEvent;
+    export let onRemoved: TabGroupEvent;
 
     /**
      * Fired when a group is updated.
      */
-    export var onUpdated: TabGroupEvent;
+    export let onUpdated: TabGroupEvent;
 
     /**
      * The group's color.
@@ -216,5 +363,5 @@ declare namespace chrome.tabGroups {
      * Modifies the properties of a group. Properties that are not specified in updateProperties are not modified.
      * @param groupId The ID of the group to modify.
      */
-    export function update(groupId: number, updateProperties: object, callback: (group: TabGroup) => void): void;
+    export function update(groupId: number, updateProperties: UpdateProperties, callback: (group: TabGroup) => void): void;
 }
